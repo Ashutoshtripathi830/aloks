@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#05070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NDC LINK">
+<link rel="manifest" href="2_manifest.json">
+<link rel="apple-touch-icon" href="4_icon-192.png">
+<title>NETWORK DENIED COMM</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070a;
+  --bg2:#080b0f;
+  --grid-line: rgba(94,255,143,0.05);
+  --grid-line-strong: rgba(94,255,143,0.09);
+  --accent:#5eff8f;
+  --accent-dim:#2b8f52;
+  --accent-glow: rgba(94,255,143,0.22);
+  --accent-glow2: rgba(94,255,143,0.08);
+  --amber:#ffb454;
+  --amber-glow: rgba(255,180,84,0.18);
+  --danger:#ff5c5c;
+  --danger-glow: rgba(255,92,92,0.16);
+  --panel: rgba(13,17,15,0.72);
+  --panel-solid:#0c100e;
+  --border: rgba(94,255,143,0.16);
+  --border-soft: rgba(255,255,255,0.06);
+  --text:#dff3e6;
+  --text2:#9db6a8;
+  --muted:#57685e;
+  --radius: 14px;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --sans: 'Inter', -apple-system, sans-serif;
+  --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  overflow-x:hidden;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+.field{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, var(--accent-glow2), transparent 60%),
+    repeating-linear-gradient(0deg, var(--grid-line) 0px, var(--grid-line) 1px, transparent 1px, transparent 34px),
+    repeating-linear-gradient(90deg, var(--grid-line) 0px, var(--grid-line) 1px, transparent 1px, transparent 34px),
+    var(--bg);
+}
+.field::before{
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(180deg, transparent, rgba(0,0,0,0.55) 100%);
+}
+.scanline{
+  position:fixed; left:0; right:0; height:120px; z-index:1; pointer-events:none;
+  background:linear-gradient(180deg, transparent, var(--accent-glow2) 45%, transparent 100%);
+  animation: scan 7s linear infinite;
+  opacity:0.5;
+}
+@keyframes scan{ 0%{ top:-120px; } 100%{ top:100vh; } }
+
+@media (prefers-reduced-motion: reduce){ .scanline{ animation:none; display:none; } }
+
+#boot{
+  position:fixed; inset:0; z-index:50;
+  background:#05070a;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-family:var(--mono);
+  transition: opacity 0.5s ease;
+}
+#boot.hide{ opacity:0; pointer-events:none; }
+.boot-lines{ width:280px; font-size:12px; color:var(--accent-dim); line-height:2; }
+.boot-lines .ok{ color:var(--accent); }
+.boot-logo{ margin-bottom:28px; text-align:center; }
+.boot-logo svg{ width:52px; height:52px; }
+
+.wrap{ position:relative; z-index:2; max-width:480px; width:100%; margin:0 auto; padding:22px 18px 40px; min-height:100vh; display:flex; flex-direction:column; }
+
+.topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+.callsign{ display:flex; align-items:center; gap:10px; }
+.callsign-mark{
+  width:34px; height:34px; border-radius:9px;
+  background:var(--panel-solid); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+}
+.callsign-mark svg{ width:18px; height:18px; }
+.callsign-text{ font-family:var(--mono); }
+.callsign-text .l1{ font-size:9px; letter-spacing:2px; color:var(--muted); font-weight:600; }
+.callsign-text .l2{ font-size:12px; letter-spacing:1px; color:var(--text2); font-weight:600; }
+.clock{ font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:0.5px; text-align:right; }
+.clock .d{ color:var(--text2); }
+
+.title-block{ margin-bottom:22px; }
+.eyebrow{ font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--accent-dim); font-weight:700; margin-bottom:6px; }
+.title-block h1{
+  font-family:var(--mono); font-size:26px; font-weight:800; letter-spacing:0.5px;
+  line-height:1.15; color:var(--text);
+}
+.title-block h1 span{ color:var(--accent); }
+.title-block p{ font-family:var(--sans); font-size:12.5px; color:var(--muted); margin-top:7px; line-height:1.5; max-width:340px; }
+
+.link-status{
+  position:relative;
+  border:1px solid var(--border);
+  background:var(--panel);
+  backdrop-filter: blur(6px);
+  border-radius:var(--radius);
+  padding:16px 16px 14px;
+  margin-bottom:16px;
+  overflow:hidden;
+}
+.corner{ position:absolute; width:14px; height:14px; border:2px solid var(--accent-dim); opacity:0.7; }
+.corner.tl{ top:-1px; left:-1px; border-right:none; border-bottom:none; border-top-left-radius:var(--radius); }
+.corner.tr{ top:-1px; right:-1px; border-left:none; border-bottom:none; border-top-right-radius:var(--radius); }
+.corner.bl{ bottom:-1px; left:-1px; border-right:none; border-top:none; border-bottom-left-radius:var(--radius); }
+.corner.br{ bottom:-1px; right:-1px; border-left:none; border-top:none; border-bottom-right-radius:var(--radius); }
+
+.link-status-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.link-status-label{ font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--muted); font-weight:700; }
+.link-badge{
+  font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:1px;
+  padding:4px 9px; border-radius:5px;
+  border:1px solid var(--border); color:var(--muted); background:rgba(255,255,255,0.02);
+  display:flex; align-items:center; gap:6px;
+}
+.link-badge .p{ width:6px; height:6px; border-radius:50%; background:var(--muted); }
+.link-badge.scanning{ color:var(--amber); border-color:rgba(255,180,84,0.35); background:var(--amber-glow); }
+.link-badge.scanning .p{ background:var(--amber); animation:pulse 1s ease-in-out infinite; }
+.link-badge.linked{ color:var(--accent); border-color:rgba(94,255,143,0.4); background:var(--accent-glow2); }
+.link-badge.linked .p{ background:var(--accent); box-shadow:0 0 7px var(--accent); }
+.link-badge.denied{ color:var(--danger); border-color:rgba(255,92,92,0.4); background:var(--danger-glow); }
+.link-badge.denied .p{ background:var(--danger); }
+@keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.25; } }
+
+.signal-row{ display:flex; align-items:flex-end; gap:16px; }
+.signal-bars{ display:flex; align-items:flex-end; gap:3px; height:22px; }
+.signal-bars i{ display:block; width:5px; background:var(--muted); border-radius:1px; opacity:0.35; }
+.signal-bars i:nth-child(1){ height:6px; }
+.signal-bars i:nth-child(2){ height:11px; }
+.signal-bars i:nth-child(3){ height:16px; }
+.signal-bars i:nth-child(4){ height:22px; }
+.signal-bars.active i{ background:var(--accent); opacity:1; box-shadow:0 0 6px var(--accent-glow); }
+.signal-bars.denied i{ background:var(--danger); opacity:1; }
+
+.telemetry{ font-family:var(--mono); font-size:10.5px; color:var(--muted); flex:1; }
+.telemetry div{ display:flex; justify-content:space-between; padding:1px 0; }
+.telemetry span:last-child{ color:var(--text2); }
+
+.panel{
+  border:1px solid var(--border-soft);
+  background:var(--panel);
+  backdrop-filter: blur(6px);
+  border-radius:var(--radius);
+  padding:18px 16px;
+  margin-bottom:14px;
+}
+.panel-label{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:2.5px; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.panel-label::after{ content:''; flex:1; height:1px; background:var(--border-soft); }
+
+.field-row{ display:flex; gap:8px; }
+.ip-input{
+  flex:1; background:var(--bg2); border:1px solid var(--border-soft); color:var(--accent);
+  font-family:var(--mono); font-size:17px; font-weight:600; letter-spacing:0.5px;
+  padding:13px 14px; border-radius:9px; outline:none; transition:var(--transition);
+}
+.ip-input:focus{ border-color:var(--accent-dim); box-shadow:0 0 0 3px var(--accent-glow2); }
+.ip-input::placeholder{ color:var(--muted); }
+.field-hint{ font-family:var(--sans); font-size:11.5px; color:var(--muted); margin-top:9px; line-height:1.55; }
+.field-hint b{ color:var(--text2); font-weight:600; }
+
+.name-input{
+  width:100%; background:var(--bg2); border:1px solid var(--border-soft); color:var(--text2);
+  font-family:var(--mono); font-size:12px; padding:11px 12px; border-radius:9px; outline:none; margin-top:10px;
+}
+.name-input:focus{ border-color:var(--accent-dim); }
+.name-input::placeholder{ color:var(--muted); font-family:var(--sans); }
+
+.btn{
+  width:100%; border:none; border-radius:9px; padding:15px; font-family:var(--mono);
+  font-size:13.5px; font-weight:700; letter-spacing:1.5px; cursor:pointer; transition:var(--transition);
+  display:flex; align-items:center; justify-content:center; gap:9px;
+}
+.btn-primary{
+  background:var(--accent); color:#04180c; margin-top:14px;
+  box-shadow:0 6px 24px -8px var(--accent-glow);
+}
+.btn-primary:active{ transform:scale(0.98); background:var(--accent-dim); color:#eafff2; }
+
+.roster-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; }
+.roster-head .panel-label{ margin-bottom:0; }
+.edit-toggle{
+  background:none; border:1px solid var(--border-soft); color:var(--muted); font-family:var(--mono);
+  font-size:10px; font-weight:700; letter-spacing:1px; cursor:pointer; padding:5px 9px; border-radius:6px;
+}
+.edit-toggle:active{ color:var(--text2); border-color:var(--border); }
+
+.roster{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.unit{
+  display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.015);
+  border:1px solid var(--border-soft); border-radius:10px; padding:11px 13px; cursor:pointer; transition:var(--transition);
+}
+.unit:active{ background:rgba(94,255,143,0.04); border-color:var(--accent-dim); }
+.unit-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent-dim); flex-shrink:0; box-shadow:0 0 5px var(--accent-glow2); }
+.unit-info{ flex:1; min-width:0; }
+.unit-name{ font-family:var(--mono); font-size:12.5px; font-weight:700; letter-spacing:0.5px; color:var(--text); }
+.unit-ip{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:1px; }
+.unit-remove{ background:none; border:none; color:var(--danger); font-size:17px; padding:4px 6px; cursor:pointer; display:none; line-height:1; }
+.roster.editing .unit-remove{ display:block; }
+.roster.editing .unit{ cursor:default; }
+
+.empty{ text-align:center; padding:16px 8px; color:var(--muted); font-family:var(--mono); font-size:11px; letter-spacing:0.5px; }
+
+.footer-note{ text-align:center; font-family:var(--sans); font-size:11px; color:var(--muted); margin-top:6px; line-height:1.65; padding:0 12px; }
+
+#handshake{
+  position:fixed; inset:0; z-index:60; background:rgba(5,7,10,0.94); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.25s ease;
+}
+#handshake.show{ opacity:1; pointer-events:auto; }
+.handshake-box{ width:300px; font-family:var(--mono); }
+.handshake-box .hs-title{ font-size:11px; letter-spacing:2px; color:var(--muted); margin-bottom:14px; text-align:center; }
+.hs-lines{ font-size:12.5px; line-height:2.1; min-height:130px; }
+.hs-lines .line{ opacity:0; transform:translateY(3px); transition:0.25s ease; color:var(--text2); }
+.hs-lines .line.show{ opacity:1; transform:translateY(0); }
+.hs-lines .line.ok{ color:var(--accent); }
+.hs-lines .line .tag{ color:var(--muted); }
+.hs-bar{ height:3px; background:rgba(255,255,255,0.06); border-radius:2px; margin-top:16px; overflow:hidden; }
+.hs-bar-fill{ height:100%; width:0%; background:var(--accent); transition:width 0.3s ease; box-shadow:0 0 8px var(--accent-glow); }
+
+.toast{
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--panel-solid); border:1px solid var(--border); color:var(--text);
+  font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:0.3px;
+  padding:12px 18px; border-radius:10px; opacity:0; pointer-events:none; transition:0.3s ease;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5); max-width:90%; text-align:center; z-index:999;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.danger{ border-color:rgba(255,92,92,0.4); color:#ffb0b0; }
+</style>
+</head>
+<body>
+
+<div class="field"></div>
+<div class="scanline"></div>
+
+<div id="boot">
+  <div class="boot-logo">
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M4 8h4M4 16h4M16 8h4M16 16h4" stroke="#5eff8f" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="7" cy="12" r="3" stroke="#5eff8f" stroke-width="2"/>
+      <circle cx="17" cy="12" r="3" stroke="#5eff8f" stroke-width="2"/>
+      <path d="M10 12h4" stroke="#5eff8f" stroke-width="2" stroke-dasharray="1.5 2"/>
+    </svg>
+  </div>
+  <div class="boot-lines" id="bootLines"></div>
+</div>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="callsign">
+      <div class="callsign-mark">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4 8h4M4 16h4M16 8h4M16 16h4" stroke="#5eff8f" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="7" cy="12" r="2.6" stroke="#5eff8f" stroke-width="2"/>
+          <circle cx="17" cy="12" r="2.6" stroke="#5eff8f" stroke-width="2"/>
+          <path d="M9.6 12h4.8" stroke="#5eff8f" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="callsign-text">
+        <div class="l1">TEAM YAKSHA</div>
+        <div class="l2">NDC LINK</div>
+      </div>
+    </div>
+    <div class="clock" id="clock">--:--:--<br><span class="d">--- -- ----</span></div>
+  </div>
+
+  <div class="title-block">
+    <div class="eyebrow">TACTICAL COMMS UPLINK</div>
+    <h1>NETWORK<br>DENIED <span>COMM</span></h1>
+    <p>Direct link to any field unit's local mesh node — no internet, no cell tower, no infrastructure. Join the unit's own radio, then establish link below.</p>
+  </div>
+
+  <div class="link-status">
+    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+    <div class="link-status-top">
+      <div class="link-status-label">CARRIER STATUS</div>
+      <div class="link-badge" id="linkBadge"><span class="p"></span><span id="linkBadgeText">STANDBY</span></div>
+    </div>
+    <div class="signal-row">
+      <div class="signal-bars" id="signalBars"><i></i><i></i><i></i><i></i></div>
+      <div class="telemetry">
+        <div><span>TARGET</span><span id="teleTarget">192.168.4.1</span></div>
+        <div><span>LATENCY</span><span id="teleLatency">-- ms</span></div>
+        <div><span>UNITS SAVED</span><span id="teleUnits">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">TARGET ADDRESS</div>
+    <div class="field-row">
+      <input id="ipInput" class="ip-input" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="192.168.4.1">
+    </div>
+    <input id="nameInput" class="name-input" type="text" placeholder="UNIT DESIGNATION — e.g. BASE, NODE2, LANDSLIDE-A" autocomplete="off">
+    <div class="field-hint">Default AP gateway is <b>192.168.4.1</b>. Join the unit's own Wi-Fi hotspot first — this app never needs internet to reach it. First link, Chrome may ask to <b>allow local network access</b> — tap Allow.</div>
+    <button class="btn btn-primary" id="connectBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#04180c"/></svg>
+      ESTABLISH LINK
+    </button>
+  </div>
+
+  <div class="panel">
+    <div class="roster-head">
+      <div class="panel-label">UNIT ROSTER</div>
+      <button class="edit-toggle" id="editToggle">EDIT</button>
+    </div>
+    <div id="roster" class="roster"></div>
+    <div id="emptyState" class="empty" style="display:none;">NO UNITS SAVED — LINK ONCE TO ADD ONE</div>
+  </div>
+
+  <div class="footer-note">
+    One device network at a time. Switch units in your phone's Wi-Fi settings, then tap a roster entry or ESTABLISH LINK.
+    <br><br>
+    Getting "content is blocked"? Tap the icon left of the address bar → Permissions → Local network → Allow, then retry.
+  </div>
+
+</div>
+
+<div id="handshake">
+  <div class="handshake-box">
+    <div class="hs-title">// ESTABLISHING LINK</div>
+    <div class="hs-lines" id="hsLines"></div>
+    <div class="hs-bar"><div class="hs-bar-fill" id="hsBarFill"></div></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const DEFAULT_IP = '192.168.4.1';
+const STORAGE_KEY = 'ndc_link_units_v1';
+
+const ipInput = document.getElementById('ipInput');
+const nameInput = document.getElementById('nameInput');
+const connectBtn = document.getElementById('connectBtn');
+const rosterEl = document.getElementById('roster');
+const emptyState = document.getElementById('emptyState');
+const editToggle = document.getElementById('editToggle');
+const toastEl = document.getElementById('toast');
+const linkBadge = document.getElementById('linkBadge');
+const linkBadgeText = document.getElementById('linkBadgeText');
+const signalBars = document.getElementById('signalBars');
+const teleTarget = document.getElementById('teleTarget');
+const teleLatency = document.getElementById('teleLatency');
+const teleUnits = document.getElementById('teleUnits');
+const clockEl = document.getElementById('clock');
+const handshakeEl = document.getElementById('handshake');
+const hsLines = document.getElementById('hsLines');
+const hsBarFill = document.getElementById('hsBarFill');
+
+let editing = false;
+
+const bootSteps = [
+  ['NDC-LINK KERNEL v2.1', false],
+  ['LOADING LOCAL STORE', true],
+  ['CHECKING SERVICE WORKER', true],
+  ['MESH INTERFACE READY', true],
+];
+function runBoot(){
+  const el = document.getElementById('bootLines');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced){ document.getElementById('boot').classList.add('hide'); return; }
+  let i = 0;
+  function next(){
+    if (i >= bootSteps.length){
+      setTimeout(() => document.getElementById('boot').classList.add('hide'), 260);
+      return;
+    }
+    const [txt, ok] = bootSteps[i];
+    const line = document.createElement('div');
+    line.innerHTML = ok ? `<span class="ok">[OK]</span> ${txt}` : `${txt}`;
+    el.appendChild(line);
+    i++;
+    setTimeout(next, i === 1 ? 260 : 190);
+  }
+  next();
+}
+runBoot();
+
+function tickClock(){
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const d = `${String(now.getDate()).padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  clockEl.innerHTML = `${hh}:${mm}:${ss}<br><span class="d">${d}</span>`;
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+function loadUnits(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
+  catch(e){ return []; }
+}
+function saveUnits(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+function showToast(msg, danger){
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show' + (danger ? ' danger' : '');
+  setTimeout(() => { toastEl.className = 'toast'; }, 2200);
+}
+
+function isValidIpOrHost(v){
+  v = v.trim();
+  if (!v) return false;
+  const ipRe = /^(\d{1,3}\.){3}\d{1,3}$/;
+  if (ipRe.test(v)) return v.split('.').every(o => Number(o) >= 0 && Number(o) <= 255);
+  return /^[a-zA-Z0-9.-]+$/.test(v);
+}
+
+function upsertUnit(ip, name){
+  let list = loadUnits();
+  const existing = list.find(u => u.ip === ip);
+  if (existing){ if (name) existing.name = name; existing.last = Date.now(); }
+  else list.push({ ip, name: name || ip, last: Date.now() });
+  list.sort((a,b) => b.last - a.last);
+  saveUnits(list);
+  renderRoster();
+}
+function removeUnit(ip){
+  saveUnits(loadUnits().filter(u => u.ip !== ip));
+  renderRoster();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderRoster(){
+  const list = loadUnits();
+  teleUnits.textContent = list.length;
+  rosterEl.innerHTML = '';
+  rosterEl.className = 'roster' + (editing ? ' editing' : '');
+  if (!list.length){ emptyState.style.display = 'block'; return; }
+  emptyState.style.display = 'none';
+  list.forEach(u => {
+    const row = document.createElement('div');
+    row.className = 'unit';
+    row.innerHTML = `
+      <div class="unit-dot"></div>
+      <div class="unit-info">
+        <div class="unit-name">${escapeHtml(u.name.toUpperCase())}</div>
+        <div class="unit-ip">${escapeHtml(u.ip)}</div>
+      </div>
+      <button class="unit-remove" aria-label="Remove">&times;</button>
+    `;
+    row.querySelector('.unit-remove').addEventListener('click', (e) => { e.stopPropagation(); removeUnit(u.ip); });
+    row.addEventListener('click', () => {
+      if (editing){ ipInput.value = u.ip; nameInput.value = u.name; return; }
+      beginHandshake(u.ip, u.name);
+    });
+    rosterEl.appendChild(row);
+  });
+}
+
+async function beginHandshake(ip, name){
+  ip = ip.trim();
+  if (!isValidIpOrHost(ip)){ showToast('INVALID ADDRESS', true); return; }
+  upsertUnit(ip, (name || '').trim());
+
+  hsLines.innerHTML = '';
+  hsBarFill.style.width = '0%';
+  handshakeEl.classList.add('show');
+
+  function addLine(t, ok, p){
+    const line = document.createElement('div');
+    line.className = 'line' + (ok ? ' ok' : '');
+    line.innerHTML = t;
+    hsLines.appendChild(line);
+    requestAnimationFrame(() => line.classList.add('show'));
+    hsBarFill.style.width = p + '%';
+  }
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+  addLine(`<span class="tag">&gt;</span> SCANNING FOR CARRIER…`, false, 15);
+  await wait(320);
+
+  // Chrome's Local Network Access (LNA) requires an explicit permission
+  // before this HTTPS-hosted app may reach a private IP like 192.168.4.1.
+  // Firing a real fetch() here — tied directly to the user's tap — is what
+  // triggers that "Allow local network access?" prompt in the right context,
+  // instead of it firing silently in the background and getting missed/denied.
+  addLine(`<span class="tag">&gt;</span> REQUESTING LOCAL NETWORK PERMISSION…`, false, 35);
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 3000);
+    await fetch('http://' + ip + '/', { mode: 'no-cors', signal: ctrl.signal });
+    clearTimeout(t);
+  } catch (e) {
+    // A timeout/network error here is fine — permission may still have been
+    // granted, or the unit simply doesn't answer this probe. Navigation below
+    // is the real connection attempt.
+  }
+  await wait(260);
+
+  addLine(`<span class="tag">&gt;</span> ROUTE ${escapeHtml(ip)}`, false, 60);
+  await wait(300);
+  addLine(`<span class="tag">&gt;</span> HANDSHAKE OK`, true, 85);
+  await wait(300);
+  addLine(`<span class="tag">&gt;</span> LINK ESTABLISHED`, true, 100);
+  await wait(380);
+
+  window.location.href = 'http://' + ip + '/';
+}
+
+connectBtn.addEventListener('click', () => beginHandshake(ipInput.value, nameInput.value));
+ipInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') connectBtn.click(); });
+
+editToggle.addEventListener('click', () => {
+  editing = !editing;
+  editToggle.textContent = editing ? 'DONE' : 'EDIT';
+  renderRoster();
+});
+
+function setLinkState(state, ms){
+  linkBadge.className = 'link-badge';
+  signalBars.className = 'signal-bars';
+  if (state === 'scanning'){
+    linkBadge.classList.add('scanning'); linkBadgeText.textContent = 'SCANNING';
+    teleLatency.textContent = '-- ms';
+  } else if (state === 'linked'){
+    linkBadge.classList.add('linked'); linkBadgeText.textContent = 'CARRIER FOUND';
+    signalBars.classList.add('active');
+    teleLatency.textContent = (ms != null ? ms : '--') + ' ms';
+  } else if (state === 'denied'){
+    linkBadge.classList.add('denied'); linkBadgeText.textContent = 'NO CARRIER';
+    signalBars.classList.add('denied');
+    teleLatency.textContent = '-- ms';
+  } else {
+    linkBadgeText.textContent = 'STANDBY';
+    teleLatency.textContent = '-- ms';
+  }
+}
+
+let probeToken = 0;
+function probe(){
+  const ip = ipInput.value.trim() || DEFAULT_IP;
+  teleTarget.textContent = ip;
+  if (!isValidIpOrHost(ip)) return;
+  const myToken = ++probeToken;
+  setLinkState('scanning');
+  const started = performance.now();
+  const img = new Image();
+  let done = false;
+  const timer = setTimeout(() => {
+    if (!done && myToken === probeToken){ done = true; setLinkState('denied'); }
+  }, 1800);
+  function finish(){
+    if (done || myToken !== probeToken) return;
+    done = true; clearTimeout(timer);
+    const ms = Math.round(performance.now() - started);
+    setLinkState('linked', ms);
+  }
+  img.onload = finish;
+  img.onerror = finish;
+  img.src = 'http://' + ip + '/favicon.ico?_=' + Date.now();
+}
+ipInput.addEventListener('input', () => { teleTarget.textContent = ipInput.value.trim() || DEFAULT_IP; });
+ipInput.addEventListener('blur', probe);
+
+renderRoster();
+ipInput.value = DEFAULT_IP;
+teleTarget.textContent = ipInput.value || DEFAULT_IP;
+probe();
+
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', () => { navigator.serviceWorker.register('3_sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
